@@ -47,12 +47,13 @@ public class TriangleIK : MonoBehaviour
   [ExecuteInEditMode]
   public void Update()
   {
+    PanTiltUPdate();
     LengthUpdate();
   }
 
   private void LengthUpdate()
   {
-    Length = Mathf.Clamp(Length, minLength, maxLength);
+    //Length = Mathf.Clamp(Length, minLength, maxLength);
 
     Triangle tri = Triangle.from3edges(bow1Length, bow2Length, Length);
 
@@ -73,6 +74,35 @@ public class TriangleIK : MonoBehaviour
 
   private void PanTiltUPdate()
   {
+    double Distance = Vector3.Distance(this.transform.position, Target.position);
+    this.Length = (float)Distance;
+
+    //Yの角度を求める
+    float xlength = Target.transform.position.x - this.transform.position.x;
+    float ylength = Target.transform.position.z - this.transform.position.z;
+    float height = Target.transform.position.y - this.transform.position.y;
+
+
+
+    float yr = Mathf.Atan2(
+      Target.transform.position.x - this.transform.position.x,
+      Target.transform.position.z - this.transform.position.z
+      ) / Mathf.PI * 180;
+
+    //斜辺の長さを求める
+    float edge = Mathf.Sqrt(
+      (xlength * xlength) +
+      (ylength * ylength)
+      );
+
+    float xr = Mathf.Atan2(
+      edge,
+      height
+      ) / Mathf.PI * 180;
+
+    this.transform.rotation = Quaternion.Euler(0, yr, 0);
+    this.Pitch = 90 - xr;
+
 
   }
 
