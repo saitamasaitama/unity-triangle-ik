@@ -7,103 +7,60 @@ public class TriangleIK : MonoBehaviour
 {
   public Transform bow1;
   public Transform bow2;
-
   public Transform Target;
-  public double Distance;
+  //public double Distance;
 
   public float bow1Length = 10f;
   public float bow2Length = 10f;
 
-  public float minLength => Math.Abs(bow2Length - bow1Length);
-  public float maxLength => bow2Length + bow1Length;
+  public float MinLength => Math.Abs(bow2Length - bow1Length);
+  public float MaxLength => bow2Length + bow1Length;
+  public float XLength => Target.transform.position.x - this.transform.position.x;
+  public float YLength => Target.transform.position.z - this.transform.position.z;
+  public float TargetHeight => Target.transform.position.y - this.transform.position.y;
+  public float EdgeLength => Mathf.Sqrt(
+    (XLength * XLength) +
+    (YLength * YLength)
+  );
+  public float rotationY => Mathf.Atan2(
+    Target.transform.position.x - this.transform.position.x,
+    Target.transform.position.z - this.transform.position.z
+    ) / Mathf.PI * 180;
+  public float rotationX => Mathf.Atan2(
+    EdgeLength,
+    TargetHeight
+  ) / Mathf.PI * 180;
 
-  public float Pitch = 0f;
-  public double AngleA = 0f;
-  public double AngleB = 0f;
-  public double AngleC = 0f;
+
+  public double TargetDistance=> Vector3.Distance(this.transform.position, Target.position);
+  public float TriangleEdgeLength => Mathf.Clamp((float)TargetDistance, MinLength, MaxLength);
+
+  public Triangle triangle => Triangle.from3edges(bow1Length, bow2Length, TriangleEdgeLength);
+  public float Tilt => 90 - this.rotationX;
 
 
-  public Vector3 Tip
-  {
-    get{
-      Vector3 A = this.transform.position;
-      Vector3 B = A + bow1.rotation * Vector3.up * bow1Length;
-      Vector3 C = B + bow2.rotation * Vector3.up * bow2Length;
-      return C;
-    }
-
-  }
+  //先端の位置
+  public Vector3 Tip => this.transform.position
+        + (bow1.rotation * Vector3.up * bow1Length)
+        + (bow2.rotation * Vector3.up * bow2Length);
     
-
-
-  [Range(0,1f)]
-  public float LengthRatio = 0;
-  public float Length=10f;
-
-
-
-
 
   [ExecuteInEditMode]
   public void Update()
   {
     PanTiltUPdate();
-    LengthUpdate();
-  }
-
-  private void LengthUpdate()
-  {
-    //Length = Mathf.Clamp(Length, minLength, maxLength);
-
-    Triangle tri = Triangle.from3edges(bow1Length, bow2Length, Length);
-
-    if (double.IsNaN(tri.angleC.Degree)) return;
-
-
-
-    AngleA = tri.angleA.Degree;
-    AngleB = tri.angleB.Degree;
-    AngleC = tri.angleC.Degree;
-
-    bow1.transform.localRotation = Quaternion.Euler((90f - (float)tri.angleB.Degree)-Pitch , 0, 0);
-    bow2.transform.localRotation = Quaternion.Euler(180f - (float)tri.angleC.Degree, 0, 0);
-
 
     DebugDraw();
   }
 
+
   private void PanTiltUPdate()
   {
-    double Distance = Vector3.Distance(this.transform.position, Target.position);
-    this.Length = (float)Distance;
-
-    //Yの角度を求める
-    float xlength = Target.transform.position.x - this.transform.position.x;
-    float ylength = Target.transform.position.z - this.transform.position.z;
-    float height = Target.transform.position.y - this.transform.position.y;
-
-
-
-    float yr = Mathf.Atan2(
-      Target.transform.position.x - this.transform.position.x,
-      Target.transform.position.z - this.transform.position.z
-      ) / Mathf.PI * 180;
-
     //斜辺の長さを求める
-    float edge = Mathf.Sqrt(
-      (xlength * xlength) +
-      (ylength * ylength)
-      );
-
-    float xr = Mathf.Atan2(
-      edge,
-      height
-      ) / Mathf.PI * 180;
-
-    this.transform.rotation = Quaternion.Euler(0, yr, 0);
-    this.Pitch = 90 - xr;
-
-
+    bow1.transform.localRotation = Quaternion.Euler((90f - (float)triangle.angleB.Degree) - Tilt, 0, 0);
+    bow2.transform.localRotation = Quaternion.Euler(180f - (float)triangle.angleC.Degree, 0, 0);
+    this.transform.rotation = Quaternion.Euler(0, rotationY, 0);
+    
   }
 
   private void DebugDraw()
@@ -113,8 +70,12 @@ public class TriangleIK : MonoBehaviour
     Vector3 B = A + bow1.rotation * Vector3.up * bow1Length;
     Vector3 C = B + bow2.rotation * Vector3.up * bow2Length;
     //1
-    Debug.DrawLine(A, B,Color.red);
-    Debug.DrawLine(B, C, Color.red);
+    Debug.DrawLine(A, B,Color.green);
+    Debug.DrawLine(B, C, Color.green);
     Debug.DrawLine(A, C, Color.yellow);
+
+    //最大・最小までを描画する
+
+
   }
 }

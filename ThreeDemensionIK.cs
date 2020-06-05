@@ -5,16 +5,12 @@ using UnityEngine;
 public class ThreeDemensionIK : MonoBehaviour
 {
   public Transform Target;
-  public double Distance;
   public TriangleIK ik;
 
   
 
   public void Update()
   {
-    Distance = Vector3.Distance(this.transform.position, Target.position);
-
-    ik.Length = (float)Distance;
 
     //Yの角度を求める
     float xlength = Target.transform.position.x - this.transform.position.x;
@@ -40,9 +36,9 @@ public class ThreeDemensionIK : MonoBehaviour
       ) / Mathf.PI * 180;
 
     this.transform.rotation = Quaternion.Euler(0, yr, 0);
-    this.ik.Pitch = 90 - xr;
+    
 
-    //Debug.Log($"Edge={edge} Y={yr} xr={xr}");
+    
 
   }
 
